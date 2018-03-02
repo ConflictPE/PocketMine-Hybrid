@@ -8,8 +8,11 @@ jobs:
 
     steps:
       - checkout
+      - run: cp project/* ./../
+      - run: cd PocketMine-Hybrid
       - run: ./applypatches.sh
-      - run: cp PocketMine-Hybrid-Core/* ./
+      - run: cp PocketMine-Hybrid-Core/* ./../
+      - run: cd ..
       - run: composer install
       - run: ./tests/travis.sh
       - store_artifacts:
