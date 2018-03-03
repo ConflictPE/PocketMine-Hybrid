@@ -7,14 +7,14 @@ jobs:
       - image: jacknoordhuis/pocketmine-hybrid:0.0.1
 
     steps:
-      - checkout
-        path: /pocketmine
+      - checkout:
+          path: /pocketmine
       - run: ./applypatches.sh
       - run: cp PocketMine-Hybrid-Core/* ./../
       - run: cd ..
       - run: composer install
       - run: ./tests/travis.sh
       - store_artifacts:
-        path: /plugins/DevTools/PocketMine-Hybrid*.phar
-        destination: PocketMine-Hybrid.phar
+          path: /plugins/DevTools/PocketMine-Hybrid*.phar
+          destination: PocketMine-Hybrid.phar
 ...
