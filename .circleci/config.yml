@@ -6,7 +6,7 @@ jobs:
       # specify the version you desire here
       - image: jacknoordhuis/pocketmine-hybrid:0.0.1
     steps:
-      - run: cp /pocketmine/* ./
+      - run: cp -r /pocketmine/* ./
       - checkout
       - run: ./applypatches.sh
       - run: cp PocketMine-Hybrid-Core/* ./../
