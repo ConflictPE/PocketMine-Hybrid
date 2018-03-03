@@ -8,6 +8,7 @@ jobs:
 
     steps:
       - checkout
+          path: /pocketmine
       - run: ./applypatches.sh
       - run: cp PocketMine-Hybrid-Core/* ./../
       - run: cd ..
