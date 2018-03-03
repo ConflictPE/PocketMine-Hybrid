@@ -14,7 +14,7 @@ jobs:
       - checkout
       - run:
           name: Setup sources
-          commands: |
+          command: |
             git submodule update --init --recursive
             cp -r /pocketmine/* ./
             ./applypatches.sh
@@ -23,7 +23,7 @@ jobs:
             bin/php7/bin/php bin/composer.phar install
       - run:
           name: Execute tests
-          commands: |
+          command: |
             ./tests/travis.sh -p ~/project/bin/php7/bin/php
       - store_artifacts:
           path: PocketMine-MP.phar
