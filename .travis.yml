@@ -1,0 +1,30 @@
+language: php
+
+php:
+ - 7.2
+
+before_script:
+# - pecl install channel://pecl.php.net/pthreads-3.1.6
+ - git config --global user.email "daswaggamer@gmail.com"
+ - git config --global user.name "JackNoordhuis"
+ - git submodule update --init --recursive
+ - echo | pecl install channel://pecl.php.net/yaml-2.0.2
+ - git clone https://github.com/krakjoe/pthreads.git
+ - cd pthreads
+ - git checkout d32079fb4a88e6e008104d36dbbf0c2dd7deb403
+ - phpize
+ - ./configure
+ - make
+ - make install
+ - cd ..
+ - echo "extension=pthreads.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+ - ./applyPatches.sh
+ - cp -r PocketMine-Hybrid-Core/* ./
+ - rm -rf PocketMine-MP PocketMine-Hybrid-Core PocketMine-MP-Patches resources doxygen.conf start.ps1 start.cmd applyPatches.sh rebuildPatches.sh upstreamMerge.sh
+ - composer install
+
+script:
+  - ./tests/travis.sh
+
+notifications:
+ email: false
