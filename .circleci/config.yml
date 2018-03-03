@@ -1,13 +1,14 @@
 ---
 version: 2
 jobs:
+  working_directory: /pocketmine
   build:
     docker:
       # specify the version you desire here
       - image: jacknoordhuis/pocketmine-hybrid:0.0.1
-    working_directory: /pocketmine
     steps:
-      - checkout
+      - checkout:
+          build_dir: /pocketmine
       - run: ./applypatches.sh
       - run: cp PocketMine-Hybrid-Core/* ./../
       - run: cd ..
