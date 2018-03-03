@@ -1,11 +1,12 @@
+---
 image: jacknoordhuis/pocketmine-hybrid
 
 stages:
  - package
 
 before_script:
- - git config --global user.email "daswaggamer@gmail.com"
- - git config --global user.name "JackNoordhuis"
+ - git config --global user.email "$GIT_USER_EMAIL"
+ - git config --global user.name "$GIT_USER_NAME"
  - git submodule update --init --recursive
  - cp -r /pocketmine/* ./
  - ./applyPatches.sh
@@ -17,8 +18,9 @@ before_script:
 phar:
   stage: package
   script:
-   - ./tests/travis.sh -p ./bin/php7/bin/php
+   - ./tests/travis.sh -p $CI_PROJECT_DIR/bin/php7/bin/php
    - mv PocketMine-MP.phar PocketMine-Hybrid.phar
   artifacts:
     paths:
      - PocketMine-Hybrid.phar
+...
