@@ -4,6 +4,8 @@ stages:
  - package
 
 before_script:
+ - git config --global user.email "daswaggamer@gmail.com"
+ - git config --global user.name "JackNoordhuis"
  - git submodule update --init --recursive
  - cp -r /pocketmine/* ./
  - ./applyPatches.sh
