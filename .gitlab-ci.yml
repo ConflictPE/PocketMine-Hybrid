@@ -17,7 +17,7 @@ before_script:
 phar:
   stage: package
   script:
-   - ./tests/travis.sh -p ./bin/php7/bin/php
+   - ./tests/travis.sh -p $CI_PROJECT_DIR/bin/php7/bin/php
    - mv PocketMine-MP.phar PocketMine-Hybrid.phar
   artifacts:
     paths:
