@@ -4,7 +4,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: jacknoordhuis/pocketmine-hybrid:0.0.1
+      - image: jacknoordhuis/pocketmine-hybrid:0.0.2
     steps:
       - run:
           name: Configure git user
