@@ -17,7 +17,7 @@ jobs:
           command: |
             git submodule update --init --recursive
             cp -r /pocketmine/* ./
-            ~/project/applypatches.sh
+            ./applyPatches.sh
             cp PocketMine-Hybrid-Core/* ./
             rm -rf PocketMine-MP PocketMine-Hybrid-Core PocketMine-MP-Patches resources doxygen.conf start.ps1 start.cmd applyPatches.sh rebuildPatches.sh upstreamMerge.sh
             bin/php7/bin/php bin/composer.phar install
