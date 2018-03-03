@@ -7,10 +7,10 @@ jobs:
       - image: jacknoordhuis/pocketmine-hybrid:0.0.1
     steps:
       - run:
-        name: Configure git user
-        command: |
-          git config --global user.email "daswaggamer@gmail.com"
-          git config --global user.name "JackNoordhuis"
+          name: Configure git user
+          command: |
+            git config --global user.email "daswaggamer@gmail.com"
+            git config --global user.name "JackNoordhuis"
       - checkout
       - run:
           name: Setup sources
