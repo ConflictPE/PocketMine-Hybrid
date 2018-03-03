@@ -5,15 +5,20 @@ stages:
 
 before_script:
  - git submodule update --init --recursive
- - ./applypatches.sh
+ - cp -r /pocketmine/* ./
+ - ./applyPatches.sh
+ - cp -r PocketMine-Hybrid-Core/* ./
+ - rm -rf PocketMine-MP PocketMine-Hybrid-Core PocketMine-MP-Patches resources doxygen.conf start.ps1 start.cmd applyPatches.sh rebuildPatches.sh upstreamMerge.sh
+ - bin/php7/bin/php bin/composer.phar install
+
 
 phar:
   stage: package
   script:
    - sed -i "s/const VERSION \?= \?\"\(.*\)\"/const VERSION = \"\1$([ ${CI_BUILD_REF_NAME} != master ] && echo unsupported-)${CI_BUILD_REF:0:7}\"/" PocketMine-Hybrid-Core/src/pocketmine/PocketMine.php
    - sed -i "/GIT_COMMIT/s/0000000000000000000000000000000000000000/${CI_BUILD_REF}/" PocketMine-Hybrid-Core/src/pocketmine/PocketMine.php
-   - ./tests/travis.sh
-   - mv PocketMine-Hybrid-Core/plugins/DevTools/PocketMine-Hybrid*.phar .
+   - ./tests/travis.sh -p ./bin/php7/bin/php
+   - mv PocketMine-MP.phar PocketMine-Hybrid.phar
   artifacts:
     paths:
-     - PocketMine-Hybrid*.phar
+     - PocketMine-Hybrid.phar
