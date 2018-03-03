@@ -19,7 +19,8 @@ jobs:
             cp -r /pocketmine/* ./
             ./applyPatches.sh
             cp -r PocketMine-Hybrid-Core/* ./
-            rm -rf PocketMine-MP PocketMine-Hybrid-Core PocketMine-MP-Patches resources doxygen.conf start.ps1 start.cmd applyPatches.sh rebuildPatches.sh upstreamMerge.sh
+            ./runPreProcessor.sh
+            rm -rf PocketMine-MP PocketMine-Hybrid-Core PocketMine-MP-Patches resources doxygen.conf start.ps1 start.cmd applyPatches.sh rebuildPatches.sh upstreamMerge.sh runPreProcessor.sh
             bin/php7/bin/php bin/composer.phar install
       - run:
           name: Execute tests
