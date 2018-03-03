@@ -9,8 +9,8 @@ jobs:
       - run:
           name: Configure git user
           command: |
-            git config --global user.email "daswaggamer@gmail.com"
-            git config --global user.name "JackNoordhuis"
+            git config --global user.email "$GIT_USER_EMAIL"
+            git config --global user.name "$GIT_USER_NAME"
       - checkout
       - run:
           name: Setup sources
