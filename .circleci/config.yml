@@ -5,7 +5,7 @@ jobs:
     docker:
       # specify the version you desire here
       - image: jacknoordhuis/pocketmine-hybrid:0.0.1
-    - working_directory: /pocketmine
+    working_directory: /pocketmine
     steps:
       - checkout
       - run: ./applypatches.sh
