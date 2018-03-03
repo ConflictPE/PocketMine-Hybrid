@@ -6,14 +6,26 @@ jobs:
       # specify the version you desire here
       - image: jacknoordhuis/pocketmine-hybrid:0.0.1
     steps:
+      - run:
+        name: Configure git user
+        command: |
+          git config --global user.email "daswaggamer@gmail.com"
+          git config --global user.name "JackNoordhuis"
       - checkout
-      - run: cp -r /pocketmine/* ./
-      - run: ./applypatches.sh
-      - run: cp PocketMine-Hybrid-Core/* ./../
-      - run: cd ..
-      - run: composer install
-      - run: ./tests/travis.sh
+      - run:
+          name: Setup sources
+          commands: |
+            git submodule update --init --recursive
+            cp -r /pocketmine/* ./
+            ./applypatches.sh
+            cp PocketMine-Hybrid-Core/* ./
+            rm -rf PocketMine-MP PocketMine-Hybrid-Core PocketMine-MP-Patches resources doxygen.conf start.ps1 start.cmd applyPatches.sh rebuildPatches.sh upstreamMerge.sh
+            bin/php7/bin/php bin/composer.phar install
+      - run:
+          name: Execute tests
+          commands: |
+            ./tests/travis.sh -p ~/project/bin/php7/bin/php
       - store_artifacts:
-          path: /plugins/DevTools/PocketMine-Hybrid*.phar
+          path: PocketMine-MP.phar
           destination: PocketMine-Hybrid.phar
 ...
