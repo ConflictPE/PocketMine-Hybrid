@@ -4,7 +4,7 @@ __PocketMine-MP tuned for the @ConflictPE Networks servers.__
 
 [![Build Status](https://travis-ci.com/ConflictPE/PocketMine-Hybrid.svg?token=fLqbLTxC2gbR3RqiksiT&branch=master)](https://travis-ci.com/ConflictPE/PocketMine-Hybrid)
 [![CircleCI](https://circleci.com/gh/ConflictPE/PocketMine-Hybrid/tree/master.svg?style=svg&circle-token=5cc6cfdf621edb101105dddc2387eb5550c33b4f)](https://circleci.com/gh/ConflictPE/PocketMine-Hybrid/tree/master)
-[![GitLabCI](https://gitlab.com/JackNoordhuis/PocketMine-Hybrid/badges/master/pipeline.svg)](https://gitlab.com/JackNoordhuis/PocketMine-Hybrid/pipelines?scope=branches)
+[![GitLabCI](https://gitlab.com/JackNoordhuis/PocketMine-Hybrid/badges/master/pipeline.svg?private_token=j2ELjYyGygQt3NbADtmq)](https://gitlab.com/JackNoordhuis/PocketMine-Hybrid/pipelines?scope=branches)
 
 ## How To
 
