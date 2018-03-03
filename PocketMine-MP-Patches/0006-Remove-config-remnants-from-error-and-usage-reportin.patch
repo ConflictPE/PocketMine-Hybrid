@@ -1,0 +1,139 @@
+From 93c040a02b12590b4875b2fcb67ef2d00e5028e5 Mon Sep 17 00:00:00 2001
+From: JackNoordhuis <daswaggamer@gmail.com>
+Date: Sun, 4 Mar 2018 00:39:01 +1100
+Subject: [PATCH] Remove config remnants from error and usage reporting
+
+
+diff --git a/src/pocketmine/CrashDump.php b/src/pocketmine/CrashDump.php
+index 6cefcb9..d72f41b 100644
+--- a/src/pocketmine/CrashDump.php
++++ b/src/pocketmine/CrashDump.php
+@@ -117,28 +117,21 @@ class CrashDump{
+ 	private function extraData(){
+ 		global $argv;
+ 
+-		if($this->server->getProperty("auto-report.send-settings", true) !== false){
+-			$this->data["parameters"] = (array) $argv;
+-			$this->data["server.properties"] = @file_get_contents($this->server->getDataPath() . "server.properties");
+-			$this->data["server.properties"] = preg_replace("#^rcon\\.password=(.*)$#m", "rcon.password=******", $this->data["server.properties"]);
+-			$this->data["pocketmine.yml"] = @file_get_contents($this->server->getDataPath() . "pocketmine.yml");
+-		}else{
+-			$this->data["pocketmine.yml"] = "";
+-			$this->data["server.properties"] = "";
+-			$this->data["parameters"] = [];
+-		}
++		$this->data["parameters"] = (array) $argv;
++		$this->data["server.properties"] = @file_get_contents($this->server->getDataPath() . "server.properties");
++		$this->data["server.properties"] = preg_replace("#^rcon\\.password=(.*)$#m", "rcon.password=******", $this->data["server.properties"]);
++		$this->data["pocketmine.yml"] = @file_get_contents($this->server->getDataPath() . "pocketmine.yml");
++
+ 		$extensions = [];
+ 		foreach(get_loaded_extensions() as $ext){
+ 			$extensions[$ext] = phpversion($ext);
+ 		}
+ 		$this->data["extensions"] = $extensions;
+ 
+-		if($this->server->getProperty("auto-report.send-phpinfo", true) !== false){
+-			ob_start();
+-			phpinfo();
+-			$this->data["phpinfo"] = ob_get_contents();
+-			ob_end_clean();
+-		}
++		ob_start();
++		phpinfo();
++		$this->data["phpinfo"] = ob_get_contents();
++		ob_end_clean();
+ 	}
+ 
+ 	private function baseCrash(){
+@@ -210,12 +203,10 @@ class CrashDump{
+ 		$this->addLine("Code:");
+ 		$this->data["code"] = [];
+ 
+-		if($this->server->getProperty("auto-report.send-code", true) !== false){
+-			$file = @file($error["fullFile"], FILE_IGNORE_NEW_LINES);
+-			for($l = max(0, $error["line"] - 10); $l < $error["line"] + 10; ++$l){
+-				$this->addLine("[" . ($l + 1) . "] " . @$file[$l]);
+-				$this->data["code"][$l + 1] = @$file[$l];
+-			}
++		$file = @file($error["fullFile"], FILE_IGNORE_NEW_LINES);
++		for($l = max(0, $error["line"] - 10); $l < $error["line"] + 10; ++$l){
++			$this->addLine("[" . ($l + 1) . "] " . @$file[$l]);
++			$this->data["code"][$l + 1] = @$file[$l];
+ 		}
+ 
+ 		$this->addLine();
+diff --git a/src/pocketmine/Server.php b/src/pocketmine/Server.php
+index 8033ab6..ab4291b 100644
+--- a/src/pocketmine/Server.php
++++ b/src/pocketmine/Server.php
+@@ -2153,41 +2153,6 @@ class Server{
+ 
+ 			$this->logger->emergency($this->getLanguage()->translateString("pocketmine.crash.submit", [$dump->getPath()]));
+ 
+-			if($this->getProperty("auto-report.enabled", true) !== false){
+-				$report = true;
+-				$plugin = $dump->getData()["plugin"];
+-				if(is_string($plugin)){
+-					$p = $this->pluginManager->getPlugin($plugin);
+-					if($p instanceof Plugin and !($p->getPluginLoader() instanceof PharPluginLoader)){
+-						$report = false;
+-					}
+-				}
+-
+-				if($dump->getData()["error"]["type"] === "E_PARSE" or $dump->getData()["error"]["type"] === "E_COMPILE_ERROR"){
+-					$report = false;
+-				}
+-
+-				if(strrpos(\pocketmine\GIT_COMMIT, "-dirty") !== false or \pocketmine\GIT_COMMIT === str_repeat("00", 20)){
+-					$this->logger->debug("Not sending crashdump due to locally modified");
+-					$report = false; //Don't send crashdumps for locally modified builds
+-				}
+-
+-				if($report){
+-					$url = ($this->getProperty("auto-report.use-https", true) ? "https" : "http") . "://" . $this->getProperty("auto-report.host", "crash.pmmp.io") . "/submit/api";
+-					$reply = Utils::postURL($url, [
+-						"report" => "yes",
+-						"name" => $this->getName() . " " . $this->getPocketMineVersion(),
+-						"email" => "crash@pocketmine.net",
+-						"reportPaste" => base64_encode($dump->getEncodedData())
+-					]);
+-
+-					if($reply !== false and ($data = json_decode($reply)) !== null and isset($data->crashId) and isset($data->crashUrl)){
+-						$reportId = $data->crashId;
+-						$reportUrl = $data->crashUrl;
+-						$this->logger->emergency($this->getLanguage()->translateString("pocketmine.crash.archive", [$reportUrl, $reportId]));
+-					}
+-				}
+-			}
+ 		}catch(\Throwable $e){
+ 			$this->logger->logException($e);
+ 			try{
+diff --git a/src/pocketmine/resources/pocketmine.yml b/src/pocketmine/resources/pocketmine.yml
+index 19be42b..ca18f26 100644
+--- a/src/pocketmine/resources/pocketmine.yml
++++ b/src/pocketmine/resources/pocketmine.yml
+@@ -152,20 +152,6 @@ chunk-generation:
+ ticks-per:
+  autosave: 6000
+ 
+-auto-report:
+- #Send crash reports for processing
+- enabled: true
+- send-code: true
+- send-settings: true
+- send-phpinfo: false
+- use-https: true
+- host: crash.pmmp.io
+-
+-anonymous-statistics:
+- #Sends anonymous statistics for data aggregation, plugin usage tracking
+- enabled: false #TODO: re-enable this when we have a new stats host
+- host: stats.pocketmine.net
+-
+ auto-updater:
+  enabled: true
+  on-update:
+-- 
+2.6.4
+

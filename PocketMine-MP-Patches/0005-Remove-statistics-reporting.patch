@@ -1,0 +1,276 @@
+From 3bd12258ca12fcdab3c2c447944f496c201e703b Mon Sep 17 00:00:00 2001
+From: JackNoordhuis <daswaggamer@gmail.com>
+Date: Sun, 4 Mar 2018 00:33:47 +1100
+Subject: [PATCH] Remove statistics reporting
+
+
+diff --git a/src/pocketmine/Server.php b/src/pocketmine/Server.php
+index e209fc9..8033ab6 100644
+--- a/src/pocketmine/Server.php
++++ b/src/pocketmine/Server.php
+@@ -91,7 +91,6 @@ use pocketmine\plugin\PluginManager;
+ use pocketmine\plugin\ScriptPluginLoader;
+ use pocketmine\resourcepacks\ResourcePackManager;
+ use pocketmine\scheduler\FileWriteTask;
+-use pocketmine\scheduler\SendUsageTask;
+ use pocketmine\scheduler\ServerScheduler;
+ use pocketmine\tile\Tile;
+ use pocketmine\utils\Binary;
+@@ -156,8 +155,6 @@ class Server{
+ 	/** @var bool */
+ 	private $doTitleTick = true;
+ 
+-	private $sendUsageTicker = 0;
+-
+ 	private $dispatchSignals = false;
+ 
+ 	/** @var \AttachableThreadedLogger */
+@@ -227,8 +224,6 @@ class Server{
+ 	private $dataPath;
+ 	private $pluginPath;
+ 
+-	private $uniquePlayers = [];
+-
+ 	/** @var QueryHandler */
+ 	private $queryHandler;
+ 
+@@ -1994,10 +1989,6 @@ class Server{
+ 		}
+ 
+ 		try{
+-			if(!$this->isRunning()){
+-				$this->sendUsage(SendUsageTask::TYPE_CLOSE);
+-			}
+-
+ 			$this->hasStopped = true;
+ 
+ 			$this->shutdown();
+@@ -2080,12 +2071,6 @@ class Server{
+ 			$this->network->blockAddress($entry->getName(), -1);
+ 		}
+ 
+-		if($this->getProperty("settings.send-usage", true)){
+-			$this->sendUsageTicker = 6000;
+-			$this->sendUsage(SendUsageTask::TYPE_OPEN);
+-		}
+-
+-
+ 		if($this->getProperty("network.upnp-forwarding", false)){
+ 			$this->logger->info("[UPnP] Trying to port forward...");
+ 			UPnP::PortForward($this->getPort());
+@@ -2157,9 +2142,7 @@ class Server{
+ 		if($this->isRunning === false){
+ 			return;
+ 		}
+-		if($this->sendUsageTicker > 0){
+-			$this->sendUsage(SendUsageTask::TYPE_CLOSE);
+-		}
++
+ 		$this->hasStopped = false;
+ 
+ 		ini_set("error_reporting", '0');
+@@ -2241,10 +2224,6 @@ class Server{
+ 	}
+ 
+ 	public function onPlayerLogin(Player $player){
+-		if($this->sendUsageTicker > 0){
+-			$this->uniquePlayers[$player->getRawUniqueId()] = $player->getRawUniqueId();
+-		}
+-
+ 		$this->loggedInPlayers[$player->getRawUniqueId()] = $player;
+ 	}
+ 
+@@ -2384,14 +2363,6 @@ class Server{
+ 		}
+ 	}
+ 
+-	public function sendUsage($type = SendUsageTask::TYPE_STATUS){
+-		if((bool) $this->getProperty("anonymous-statistics.enabled", true)){
+-			$this->scheduler->scheduleAsyncTask(new SendUsageTask($this, $type, $this->uniquePlayers));
+-		}
+-		$this->uniquePlayers = [];
+-	}
+-
+-
+ 	/**
+ 	 * @return BaseLang
+ 	 */
+@@ -2524,11 +2495,6 @@ class Server{
+ 			$this->doAutoSave();
+ 		}
+ 
+-		if($this->sendUsageTicker > 0 and --$this->sendUsageTicker === 0){
+-			$this->sendUsageTicker = 6000;
+-			$this->sendUsage(SendUsageTask::TYPE_STATUS);
+-		}
+-
+ 		if(($this->tickCounter % 100) === 0){
+ 			foreach($this->levels as $level){
+ 				$level->clearCache();
+diff --git a/src/pocketmine/scheduler/SendUsageTask.php b/src/pocketmine/scheduler/SendUsageTask.php
+deleted file mode 100644
+index 526279c..00000000
+--- a/src/pocketmine/scheduler/SendUsageTask.php
++++ /dev/null
+@@ -1,158 +0,0 @@
+-<?php
+-
+-/*
+- *
+- *  ____            _        _   __  __ _                  __  __ ____
+- * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+- * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+- * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+- * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+- *
+- * This program is free software: you can redistribute it and/or modify
+- * it under the terms of the GNU Lesser General Public License as published by
+- * the Free Software Foundation, either version 3 of the License, or
+- * (at your option) any later version.
+- *
+- * @author PocketMine Team
+- * @link http://www.pocketmine.net/
+- *
+- *
+-*/
+-
+-declare(strict_types=1);
+-
+-namespace pocketmine\scheduler;
+-
+-use pocketmine\network\mcpe\protocol\ProtocolInfo;
+-use pocketmine\Server;
+-use pocketmine\utils\Utils;
+-use pocketmine\utils\UUID;
+-use pocketmine\utils\VersionString;
+-
+-class SendUsageTask extends AsyncTask{
+-
+-	public const TYPE_OPEN = 1;
+-	public const TYPE_STATUS = 2;
+-	public const TYPE_CLOSE = 3;
+-
+-	public $endpoint;
+-	public $data;
+-
+-	/**
+-	 * @param Server $server
+-	 * @param int    $type
+-	 * @param array  $playerList
+-	 */
+-	public function __construct(Server $server, int $type, array $playerList = []){
+-		$endpoint = "http://" . $server->getProperty("anonymous-statistics.host", "stats.pocketmine.net") . "/";
+-
+-		$data = [];
+-		$data["uniqueServerId"] = $server->getServerUniqueId()->toString();
+-		$data["uniqueMachineId"] = Utils::getMachineUniqueId()->toString();
+-		$data["uniqueRequestId"] = UUID::fromData($server->getServerUniqueId()->toString(), microtime(false))->toString();
+-
+-		switch($type){
+-			case self::TYPE_OPEN:
+-				$data["event"] = "open";
+-
+-				$version = new VersionString();
+-
+-				$data["server"] = [
+-					"port" => $server->getPort(),
+-					"software" => $server->getName(),
+-					"fullVersion" => $version->get(true),
+-					"version" => $version->get(),
+-					"build" => $version->getBuild(),
+-					"api" => $server->getApiVersion(),
+-					"minecraftVersion" => $server->getVersion(),
+-					"protocol" => ProtocolInfo::CURRENT_PROTOCOL
+-				];
+-
+-				$data["system"] = [
+-					"operatingSystem" => Utils::getOS(),
+-					"cores" => Utils::getCoreCount(),
+-					"phpVersion" => PHP_VERSION,
+-					"machine" => php_uname("a"),
+-					"release" => php_uname("r"),
+-					"platform" => php_uname("i")
+-				];
+-
+-				$data["players"] = [
+-					"count" => 0,
+-					"limit" => $server->getMaxPlayers()
+-				];
+-
+-				$plugins = [];
+-
+-				foreach($server->getPluginManager()->getPlugins() as $p){
+-					$d = $p->getDescription();
+-
+-					$plugins[$d->getName()] = [
+-						"name" => $d->getName(),
+-						"version" => $d->getVersion(),
+-						"enabled" => $p->isEnabled()
+-					];
+-				}
+-
+-				$data["plugins"] = $plugins;
+-
+-				break;
+-			case self::TYPE_STATUS:
+-				$data["event"] = "status";
+-
+-				$data["server"] = [
+-					"ticksPerSecond" => $server->getTicksPerSecondAverage(),
+-					"tickUsage" => $server->getTickUsageAverage(),
+-					"ticks" => $server->getTick()
+-				];
+-
+-
+-				//This anonymizes the user ids so they cannot be reversed to the original
+-				foreach($playerList as $k => $v){
+-					$playerList[$k] = md5($v);
+-				}
+-
+-				$players = [];
+-				foreach($server->getOnlinePlayers() as $p){
+-					if($p->isOnline()){
+-						$players[] = md5($p->getUniqueId()->toBinary());
+-					}
+-				}
+-
+-				$data["players"] = [
+-					"count" => count($players),
+-					"limit" => $server->getMaxPlayers(),
+-					"currentList" => $players,
+-					"historyList" => array_values($playerList)
+-				];
+-
+-				$info = Utils::getMemoryUsage(true);
+-				$data["system"] = [
+-					"mainMemory" => $info[0],
+-					"totalMemory" => $info[1],
+-					"availableMemory" => $info[2],
+-					"threadCount" => Utils::getThreadCount()
+-				];
+-
+-				break;
+-			case self::TYPE_CLOSE:
+-				$data["event"] = "close";
+-				$data["crashing"] = $server->isRunning();
+-				break;
+-		}
+-
+-		$this->endpoint = $endpoint . "api/post";
+-		$this->data = json_encode($data/*, JSON_PRETTY_PRINT*/);
+-	}
+-
+-	public function onRun(){
+-		try{
+-			Utils::postURL($this->endpoint, $this->data, 5, [
+-				"Content-Type: application/json",
+-				"Content-Length: " . strlen($this->data)
+-			]);
+-		}catch(\Throwable $e){
+-
+-		}
+-	}
+-}
+-- 
+2.6.4
+
