@@ -20,7 +20,7 @@ before_script:
  - echo "extension=pthreads.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
  - ./applyPatches.sh
  - cp -r PocketMine-Hybrid-Core/* ./
- - ./runPreProcessor.sh
+ - ./runPreProcessor.sh -d src/pocketmine/PocketMine.php
  - rm -rf PocketMine-MP PocketMine-Hybrid-Core PocketMine-MP-Patches resources doxygen.conf start.ps1 start.cmd applyPatches.sh rebuildPatches.sh upstreamMerge.sh runPreProcessor.sh
  - composer install
 
