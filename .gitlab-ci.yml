@@ -11,7 +11,7 @@ before_script:
  - cp -r /pocketmine/* ./
  - ./applyPatches.sh
  - cp -r PocketMine-Hybrid-Core/* ./
- - ./runPreProcessor.sh -d src/pocketmine/PocketMine.php
+ - ./runPreProcessor.sh -d $CI_PROJECT_DIR/src/pocketmine
  - rm -rf PocketMine-MP PocketMine-Hybrid-Core PocketMine-MP-Patches resources doxygen.conf start.ps1 start.cmd applyPatches.sh rebuildPatches.sh upstreamMerge.sh runPreProcessor.sh
  - bin/php7/bin/php bin/composer.phar install
 
